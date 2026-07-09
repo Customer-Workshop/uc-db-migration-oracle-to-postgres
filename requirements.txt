@@ -1,0 +1,4 @@
+-r seed/requirements.txt
+-r verify/requirements.txt
+sqlfluff>=3.3.0
+pre-commit>=3.7.0
