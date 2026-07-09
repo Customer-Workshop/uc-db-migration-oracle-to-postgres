@@ -47,9 +47,10 @@ make demo-down NS=dev
 ```
 
 `make demo-up` prints a reconciliation report showing which controls pass. On a
-fresh clone (Phase 1 only), two controls pass and two report FAIL because the
-objects they validate (`vw_active_employees`, `vw_org_hierarchy`) are converted
-live during the demo.
+fresh clone (Phase 1 only), two controls pass and two report PENDING because
+the objects they validate (`vw_active_employees`, `vw_org_hierarchy`) are
+converted live during the demo. PENDING does not fail the CI gate; a genuine
+mismatch on a deployed object reports FAIL and does.
 
 <a id="how-it-works"></a>
 
