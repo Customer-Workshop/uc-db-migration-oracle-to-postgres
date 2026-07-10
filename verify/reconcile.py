@@ -215,11 +215,108 @@ def check_leave_balance_nonnegative(cur, ns: str, raw: str) -> CheckResult:
     return CheckResult(name, passed, 0, violations, detail)
 
 
+def check_audit_trigger_capture(cur, ns: str, raw: str) -> CheckResult:
+    """Verify the converted audit triggers capture DML into audit_log.
+
+    Exercises all three triggers inside a single transaction that is rolled
+    back, so the namespace is left untouched and the control is idempotent:
+
+      - departments   INSERT + UPDATE + DELETE -> 3 audit rows
+      - salary_records INSERT + UPDATE + DELETE -> 3 audit rows
+      - leave_requests INSERT (no audit) then STATUS change -> 1 audit row
+
+    Total expected: 7. Because the converted PKG_AUDIT.log_action writes in the
+    caller's transaction (the local-demo substitute for Oracle's autonomous
+    transaction), the audit rows are visible before the rollback that discards
+    the probe.
+    """
+    name = "audit_trigger_capture"
+    expected = 7
+    if not _relation_exists(cur, ns, "audit_log"):
+        return CheckResult(
+            name, False, expected, None,
+            f"{ns}.audit_log not deployed — convert plsql/triggers/trg_audit.sql "
+            f"(PRAGMA AUTONOMOUS_TRANSACTION, SEQ.NEXTVAL, SYS_CONTEXT, Phase 2) "
+            f"to satisfy this control.",
+            pending=True,
+        )
+
+    conn = get_connection()
+    conn.autocommit = False
+    tcur = conn.cursor()
+    try:
+        tcur.execute(f"SELECT min(emp_id) FROM {ns}.employees")
+        emp_id = tcur.fetchone()[0]
+        tcur.execute(f"SELECT min(leave_type_id) FROM {ns}.leave_types")
+        leave_type_id = tcur.fetchone()[0]
+
+        # TRG_DEPARTMENT_AUDIT: INSERT + UPDATE + DELETE
+        tcur.execute(
+            f"INSERT INTO {ns}.departments (dept_id, dept_code, dept_name) "
+            f"VALUES (999001, 'ZZAUDIT', 'Audit Probe')"
+        )
+        tcur.execute(
+            f"UPDATE {ns}.departments SET dept_name = 'Audit Probe 2' "
+            f"WHERE dept_id = 999001"
+        )
+        tcur.execute(f"DELETE FROM {ns}.departments WHERE dept_id = 999001")
+
+        # TRG_SALARY_AUDIT: INSERT + UPDATE + DELETE
+        tcur.execute(
+            f"INSERT INTO {ns}.salary_records "
+            f"(salary_id, emp_id, effective_date, base_salary, active_flag) "
+            f"VALUES (900000001, %s, current_date, 50000, 'Y')",
+            (emp_id,),
+        )
+        tcur.execute(
+            f"UPDATE {ns}.salary_records SET base_salary = 55000, active_flag = 'N' "
+            f"WHERE salary_id = 900000001"
+        )
+        tcur.execute(f"DELETE FROM {ns}.salary_records WHERE salary_id = 900000001")
+
+        # TRG_LEAVE_REQUEST_AUDIT: INSERT (must NOT audit) then STATUS change
+        tcur.execute(
+            f"INSERT INTO {ns}.leave_requests "
+            f"(request_id, emp_id, leave_type_id, start_date, end_date, "
+            f" total_days, status, created_by) "
+            f"VALUES (900000002, %s, %s, current_date, current_date, 1, "
+            f" 'PENDING', 'probe')",
+            (emp_id, leave_type_id),
+        )
+        tcur.execute(
+            f"UPDATE {ns}.leave_requests SET status = 'APPROVED', "
+            f"modified_by = 'probe_mgr' WHERE request_id = 900000002"
+        )
+
+        tcur.execute(f"SELECT count(*) FROM {ns}.audit_log")
+        actual = tcur.fetchone()[0]
+        tcur.execute(
+            f"SELECT table_name || '/' || action_type || '=' || count(*) "
+            f"FROM {ns}.audit_log GROUP BY table_name, action_type "
+            f"ORDER BY table_name, action_type"
+        )
+        breakdown = ", ".join(r[0] for r in tcur.fetchall())
+    finally:
+        conn.rollback()
+        tcur.close()
+        conn.close()
+
+    passed = actual == expected
+    detail = (
+        f"captured: {breakdown}" if passed else
+        f"expected 7 audit rows (dept I/U/D=3, salary I/U/D=3, leave "
+        f"STATUS_CHANGE=1), got {actual}: {breakdown} — check TG_OP branches, "
+        f"the AFTER UPDATE OF status binding, or the audit_log INSERT."
+    )
+    return CheckResult(name, passed, expected, actual, detail)
+
+
 CONTROLS = [
     check_active_employee_completeness,
     check_org_hierarchy_reachability,
     check_payroll_control_totals,
     check_leave_balance_nonnegative,
+    check_audit_trigger_capture,
 ]
 
 
