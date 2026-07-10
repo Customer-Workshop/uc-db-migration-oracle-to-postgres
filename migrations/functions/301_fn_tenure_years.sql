@@ -11,7 +11,7 @@
 
 CREATE OR REPLACE FUNCTION "$(NS)".fn_tenure_years(
     p_hire_date date,
-    p_as_of     date DEFAULT current_date
+    p_as_of date DEFAULT current_date
 ) RETURNS numeric
 LANGUAGE sql
 IMMUTABLE

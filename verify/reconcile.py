@@ -52,7 +52,6 @@ import re
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Optional
 
 try:
     import psycopg2
@@ -86,7 +85,7 @@ class CheckResult:
 # ---------------------------------------------------------------------------
 
 
-def get_connection() -> "psycopg2.extensions.connection":
+def get_connection() -> psycopg2.extensions.connection:
     if psycopg2 is None:
         raise ImportError("psycopg2 is required: pip install psycopg2-binary")
 
@@ -106,7 +105,7 @@ def _validate_schema_name(name: str) -> None:
         raise ValueError(f"Invalid schema name: {name!r}")
 
 
-def _scalar(cur, sql: str) -> Optional[object]:
+def _scalar(cur, sql: str) -> object | None:
     cur.execute(sql)
     row = cur.fetchone()
     return row[0] if row else None
