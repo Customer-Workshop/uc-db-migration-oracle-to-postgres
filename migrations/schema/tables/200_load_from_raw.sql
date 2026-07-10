@@ -13,6 +13,30 @@
   omitted from the explicit column list below.
 =====================================================================*/
 
+INSERT INTO "$(NS)".locations
+(
+    location_code, location_name, address_line1, address_line2, city,
+    state_province, postal_code, country_code, phone_number, timezone,
+    active_flag, created_by, created_date, modified_by, modified_date
+)
+SELECT
+    location_code,
+    location_name,
+    address_line1,
+    address_line2,
+    city,
+    state_province,
+    postal_code,
+    country_code,
+    phone_number,
+    timezone,
+    active_flag,
+    created_by,
+    created_date,
+    modified_by,
+    modified_date
+FROM raw.locations;
+
 INSERT INTO "$(NS)".job_grades
 (grade_id, grade_code, grade_name, min_salary, max_salary, overtime_eligible)
 SELECT
@@ -48,9 +72,10 @@ FROM raw.departments;
 
 INSERT INTO "$(NS)".employees
 (
-    emp_id, emp_number, first_name, last_name, email, hire_date,
-    termination_date, dept_id, job_id, manager_emp_id, location_code,
-    employment_type, employment_status, active_flag
+    emp_id, emp_number, first_name, last_name, email, phone_work,
+    phone_mobile, hire_date, termination_date, dept_id, job_id,
+    manager_emp_id, location_code, employment_type, employment_status,
+    active_flag
 )
 SELECT
     emp_id,
@@ -58,6 +83,8 @@ SELECT
     first_name,
     last_name,
     email,
+    phone_work,
+    phone_mobile,
     hire_date,
     termination_date,
     dept_id,
