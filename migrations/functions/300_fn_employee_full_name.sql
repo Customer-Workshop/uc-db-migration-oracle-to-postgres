@@ -13,7 +13,7 @@
 
 CREATE OR REPLACE FUNCTION "$(NS)".fn_employee_full_name(
     p_first_name text,
-    p_last_name  text
+    p_last_name text
 ) RETURNS text
 LANGUAGE sql
 IMMUTABLE

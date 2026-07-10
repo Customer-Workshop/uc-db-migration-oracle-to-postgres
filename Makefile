@@ -27,8 +27,9 @@ install: ## Install Python dependencies + pre-commit hooks
 	pip install -r requirements.txt -r seed/requirements.txt -r verify/requirements.txt
 	pre-commit install
 
-lint: ## Lint SQL files with sqlfluff (PostgreSQL dialect)
+lint: ## Lint SQL (sqlfluff, PostgreSQL dialect) and Python (ruff)
 	sqlfluff lint migrations/ --dialect postgres --config .sqlfluff
+	ruff check seed/ verify/
 
 seed: ## Load synthetic data into the raw schema (idempotent)
 	$(PYTHON) seed/generate_and_load.py --schema raw

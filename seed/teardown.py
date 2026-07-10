@@ -21,7 +21,7 @@ except ImportError:  # pragma: no cover - import guard
     psycopg2 = None  # type: ignore[assignment]
 
 
-def get_connection() -> "psycopg2.extensions.connection":
+def get_connection() -> psycopg2.extensions.connection:
     if psycopg2 is None:
         raise ImportError("psycopg2 is required: pip install psycopg2-binary")
 

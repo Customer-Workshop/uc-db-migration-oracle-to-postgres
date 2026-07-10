@@ -31,7 +31,7 @@ except ImportError:  # pragma: no cover - import guard
     psycopg2 = None  # type: ignore[assignment]
 
 
-def get_connection() -> "psycopg2.extensions.connection":
+def get_connection() -> psycopg2.extensions.connection:
     if psycopg2 is None:
         raise ImportError("psycopg2 is required: pip install psycopg2-binary")
 
@@ -63,7 +63,7 @@ def deploy(namespace: str, migrations_dir: str = "migrations/") -> None:
 
     sql_files = sorted(
         glob.glob(os.path.join(migrations_dir, "**", "*.sql"), recursive=True),
-        key=lambda f: os.path.basename(f),
+        key=os.path.basename,
     )
 
     if not sql_files:
@@ -75,7 +75,7 @@ def deploy(namespace: str, migrations_dir: str = "migrations/") -> None:
     errors = []
     for filepath in sql_files:
         basename = os.path.basename(filepath)
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             sql = f.read()
 
         sql = sql.replace("$(NS)", namespace)

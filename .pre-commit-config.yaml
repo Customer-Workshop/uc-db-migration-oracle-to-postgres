@@ -15,6 +15,12 @@ repos:
           - --config
           - .sqlfluff
 
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        files: ^(seed|verify)/
+
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.35.1
     hooks:

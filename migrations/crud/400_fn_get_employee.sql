@@ -13,12 +13,12 @@
 CREATE OR REPLACE FUNCTION "$(NS)".fn_get_employee(
     p_emp_id integer
 ) RETURNS TABLE (
-    emp_id        integer,
-    emp_number    varchar,
-    full_name     text,
-    email         varchar,
-    dept_name     varchar,
-    job_title     varchar,
+    emp_id integer,
+    emp_number varchar,
+    full_name text,
+    email varchar,
+    dept_name varchar,
+    job_title varchar,
     employment_status varchar
 )
 LANGUAGE sql

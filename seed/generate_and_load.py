@@ -34,7 +34,6 @@ import re
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Optional
 
 try:
     import psycopg2
@@ -96,7 +95,7 @@ class Department:
     dept_id: int
     dept_code: str
     dept_name: str
-    parent_dept_id: Optional[int]
+    parent_dept_id: int | None
     cost_center: str
     location_code: str
 
@@ -129,10 +128,10 @@ class Employee:
     last_name: str
     email: str
     hire_date: date
-    termination_date: Optional[date]
+    termination_date: date | None
     dept_id: int
     job_id: int
-    manager_emp_id: Optional[int]
+    manager_emp_id: int | None
     location_code: str
     employment_type: str
     employment_status: str
@@ -144,7 +143,7 @@ class SalaryRecord:
     salary_id: int
     emp_id: int
     effective_date: date
-    end_date: Optional[date]
+    end_date: date | None
     base_salary: Decimal
     currency_code: str
     pay_frequency: str
@@ -345,7 +344,7 @@ def generate(seed: int = SEED) -> SeedData:
     for e in data.employees:
         if e.employment_status != "ACTIVE":
             continue
-        for lt_id, _code, _name, _paid, accrual_rate, max_bal in LEAVE_TYPES:
+        for lt_id, _code, _name, _paid, accrual_rate, _max_bal in LEAVE_TYPES:
             opening = Decimal(str(round(rng.uniform(0, 5), 1)))
             accrued = (accrual_rate * Decimal(rng.randint(1, 12))).quantize(Decimal("0.1"))
             used = Decimal(str(round(rng.uniform(0, float(opening + accrued)), 1)))
@@ -381,7 +380,6 @@ def generate(seed: int = SEED) -> SeedData:
     deductions = Decimal(0)
     net = Decimal(0)
     paid_emps = set()
-    element_by_id = {e[0]: e for e in PAY_ELEMENTS}
     for e in data.employees:
         if e.employment_status != "ACTIVE":
             continue
@@ -420,7 +418,7 @@ def generate(seed: int = SEED) -> SeedData:
 # ---------------------------------------------------------------------------
 
 
-def get_connection() -> "psycopg2.extensions.connection":
+def get_connection() -> psycopg2.extensions.connection:
     """Build a psycopg2 connection from standard PG* environment variables."""
     if psycopg2 is None:
         raise ImportError("psycopg2 is required: pip install psycopg2-binary")
@@ -588,7 +586,8 @@ def load(data: SeedData, schema: str = "raw", dry_run: bool = False) -> None:
         f"(grade_id, grade_code, grade_name, min_salary, max_salary, overtime_eligible) "
         f"VALUES %s",
         [
-            (g.grade_id, g.grade_code, g.grade_name, g.min_salary, g.max_salary, g.overtime_eligible)
+            (g.grade_id, g.grade_code, g.grade_name, g.min_salary,
+             g.max_salary, g.overtime_eligible)
             for g in data.job_grades
         ],
     )

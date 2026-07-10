@@ -12,8 +12,8 @@
 
 CREATE OR REPLACE FUNCTION "$(NS)".fn_compa_ratio(
     p_base_salary numeric,
-    p_grade_min   numeric,
-    p_grade_max   numeric
+    p_grade_min numeric,
+    p_grade_max numeric
 ) RETURNS numeric
 LANGUAGE sql
 IMMUTABLE

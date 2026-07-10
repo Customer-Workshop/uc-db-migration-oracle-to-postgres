@@ -11,31 +11,31 @@
 =====================================================================*/
 
 CREATE TABLE "$(NS)".employees (
-    emp_id            integer       NOT NULL,
-    emp_number        varchar(20)   NOT NULL,
-    first_name        varchar(50)   NOT NULL,
-    last_name         varchar(50)   NOT NULL,
-    email             varchar(100),
-    phone_work        varchar(30),
-    phone_mobile      varchar(30),
-    hire_date         date          NOT NULL,
-    termination_date  date,
-    dept_id           integer       NOT NULL,
-    job_id            integer       NOT NULL,
-    manager_emp_id    integer,
-    location_code     varchar(10),
-    employment_type   varchar(20)   DEFAULT 'FULL_TIME',
-    employment_status varchar(20)   DEFAULT 'ACTIVE',
-    active_flag       char(1)       DEFAULT 'Y' NOT NULL,
-    created_date      timestamptz   DEFAULT now() NOT NULL,
+    emp_id integer NOT NULL,
+    emp_number varchar(20) NOT NULL,
+    first_name varchar(50) NOT NULL,
+    last_name varchar(50) NOT NULL,
+    email varchar(100),
+    phone_work varchar(30),
+    phone_mobile varchar(30),
+    hire_date date NOT NULL,
+    termination_date date,
+    dept_id integer NOT NULL,
+    job_id integer NOT NULL,
+    manager_emp_id integer,
+    location_code varchar(10),
+    employment_type varchar(20) DEFAULT 'FULL_TIME',
+    employment_status varchar(20) DEFAULT 'ACTIVE',
+    active_flag char(1) DEFAULT 'Y' NOT NULL,
+    created_date timestamptz DEFAULT now() NOT NULL,
     CONSTRAINT pk_employees PRIMARY KEY (emp_id),
     CONSTRAINT uk_emp_number UNIQUE (emp_number),
     CONSTRAINT fk_emp_dept FOREIGN KEY (dept_id)
-        REFERENCES "$(NS)".departments (dept_id),
+    REFERENCES "$(NS)".departments (dept_id),
     CONSTRAINT fk_emp_job FOREIGN KEY (job_id)
-        REFERENCES "$(NS)".job_titles (job_id),
+    REFERENCES "$(NS)".job_titles (job_id),
     CONSTRAINT fk_emp_manager FOREIGN KEY (manager_emp_id)
-        REFERENCES "$(NS)".employees (emp_id),
+    REFERENCES "$(NS)".employees (emp_id),
     CONSTRAINT chk_emp_status CHECK (
         employment_status IN ('ACTIVE', 'TERMINATED', 'ON_LEAVE', 'SUSPENDED')
     )

@@ -13,14 +13,14 @@
 CREATE SCHEMA IF NOT EXISTS "$(NS)";
 
 CREATE TABLE "$(NS)".job_grades (
-    grade_id          integer        NOT NULL,
-    grade_code        varchar(10)    NOT NULL,
-    grade_name        varchar(50)    NOT NULL,
-    min_salary        numeric(12,2)  NOT NULL,
-    max_salary        numeric(12,2)  NOT NULL,
-    overtime_eligible char(1)        DEFAULT 'N',
-    created_by        varchar(30),
-    created_date      timestamptz    DEFAULT now() NOT NULL,
+    grade_id integer NOT NULL,
+    grade_code varchar(10) NOT NULL,
+    grade_name varchar(50) NOT NULL,
+    min_salary numeric(12, 2) NOT NULL,
+    max_salary numeric(12, 2) NOT NULL,
+    overtime_eligible char(1) DEFAULT 'N',
+    created_by varchar(30),
+    created_date timestamptz DEFAULT now() NOT NULL,
     CONSTRAINT pk_job_grades PRIMARY KEY (grade_id),
     CONSTRAINT uk_job_grade_code UNIQUE (grade_code),
     CONSTRAINT chk_grade_ot CHECK (overtime_eligible IN ('Y', 'N'))

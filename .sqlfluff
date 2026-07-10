@@ -1,8 +1,16 @@
 [sqlfluff]
 dialect = postgres
-templater = raw
+templater = placeholder
 max_line_length = 120
-exclude_rules = LT05
+# LT05: long-line wrapping is handled manually.
+# RF06: identifiers are quoted deliberately — "$(NS)" is substituted verbatim.
+# PG01: indexes are created on empty tables at deploy time; CONCURRENTLY does
+#       not apply to this greenfield namespace deployment.
+exclude_rules = LT05, RF06, PG01
+
+[sqlfluff:templater:placeholder]
+param_regex = \$\((?P<param_name>\w+)\)
+NS = ns
 
 [sqlfluff:indentation]
 indent_unit = space
