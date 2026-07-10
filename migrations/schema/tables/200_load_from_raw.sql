@@ -115,15 +115,21 @@ FROM raw.salary_records;
 INSERT INTO "$(NS)".leave_types
 (
     leave_type_id, leave_type_code, leave_type_name, paid_flag,
-    accrual_rate, max_balance
+    accrual_flag, accrual_rate, accrual_frequency, max_balance,
+    carryover_max, carryover_expiry, min_tenure_days
 )
 SELECT
     leave_type_id,
     leave_type_code,
     leave_type_name,
     paid_flag,
+    'Y' AS accrual_flag,
     accrual_rate,
-    max_balance
+    'MONTHLY' AS accrual_frequency,
+    max_balance,
+    max_balance AS carryover_max,
+    3 AS carryover_expiry,
+    0 AS min_tenure_days
 FROM raw.leave_types;
 
 INSERT INTO "$(NS)".leave_balances
@@ -142,6 +148,14 @@ SELECT
     adjustment,
     pending
 FROM raw.leave_balances;
+
+SELECT
+    setval(
+        '"$(NS)".seq_leave_balance'::regclass,
+        coalesce(max(balance_id), 0) + 1,
+        false
+    )
+FROM "$(NS)".leave_balances;
 
 INSERT INTO "$(NS)".pay_elements
 (element_id, element_code, element_name, element_type)
