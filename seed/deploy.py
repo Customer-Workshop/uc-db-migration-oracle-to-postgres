@@ -58,8 +58,10 @@ def deploy(namespace: str, migrations_dir: str = "migrations/") -> None:
     conn = get_connection()
     cur = conn.cursor()
 
-    # Ensure the namespace schema exists.
-    cur.execute(f'CREATE SCHEMA IF NOT EXISTS "{namespace}"')
+    # The namespace schema is disposable by design: recreate it so repeated
+    # deploys are idempotent. The raw source schema is never touched.
+    cur.execute(f'DROP SCHEMA IF EXISTS "{namespace}" CASCADE')
+    cur.execute(f'CREATE SCHEMA "{namespace}"')
 
     sql_files = sorted(
         glob.glob(os.path.join(migrations_dir, "**", "*.sql"), recursive=True),
