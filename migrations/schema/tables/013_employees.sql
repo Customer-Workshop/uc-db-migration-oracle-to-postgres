@@ -36,6 +36,8 @@ CREATE TABLE "$(NS)".employees (
     REFERENCES "$(NS)".job_titles (job_id),
     CONSTRAINT fk_emp_manager FOREIGN KEY (manager_emp_id)
     REFERENCES "$(NS)".employees (emp_id),
+    CONSTRAINT fk_emp_location FOREIGN KEY (location_code)
+    REFERENCES "$(NS)".locations (location_code),
     CONSTRAINT chk_emp_status CHECK (
         employment_status IN ('ACTIVE', 'TERMINATED', 'ON_LEAVE', 'SUSPENDED')
     )
