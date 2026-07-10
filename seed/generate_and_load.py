@@ -59,9 +59,9 @@ BASE_DATE = date(2024, 6, 30)
 
 STATES = ["CA", "TX", "FL", "NY", "IL", "PA", "OH"]
 LOCATIONS = [
-    ("NYC", "New York HQ", "New York", "NY"),
-    ("SFO", "San Francisco", "San Francisco", "CA"),
-    ("AUS", "Austin", "Austin", "TX"),
+    ("NYC", "New York HQ", "New York", "NY", "USA"),
+    ("SFO", "San Francisco", "San Francisco", "CA", "USA"),
+    ("AUS", "Austin", "Austin", "TX", "USA"),
 ]
 EMPLOYMENT_TYPES = ["FULL_TIME", "FULL_TIME", "FULL_TIME", "PART_TIME", "CONTRACT"]
 
@@ -127,6 +127,8 @@ class Employee:
     first_name: str
     last_name: str
     email: str
+    phone_work: str
+    phone_mobile: str
     hire_date: date
     termination_date: date | None
     dept_id: int
@@ -280,6 +282,8 @@ def generate(seed: int = SEED) -> SeedData:
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
                 email=fake.unique.email(),
+                phone_work=f"+1-212-555-{n:04d}",
+                phone_mobile=f"+1-917-555-{n:04d}",
                 hire_date=hire,
                 termination_date=term_date,
                 dept_id=rng.randint(1, DEPARTMENT_COUNT),
@@ -446,6 +450,24 @@ RAW_DDL = """
 DROP SCHEMA IF EXISTS {schema} CASCADE;
 CREATE SCHEMA {schema};
 
+CREATE TABLE {schema}.locations (
+    location_code  varchar(10) PRIMARY KEY,
+    location_name  varchar(100) NOT NULL,
+    address_line1  varchar(200),
+    address_line2  varchar(200),
+    city           varchar(100),
+    state_province varchar(100),
+    postal_code    varchar(20),
+    country_code   varchar(3),
+    phone_number   varchar(30),
+    timezone       varchar(50) DEFAULT 'America/New_York',
+    active_flag    char(1) DEFAULT 'Y' NOT NULL,
+    created_by     varchar(30),
+    created_date   timestamptz DEFAULT now() NOT NULL,
+    modified_by    varchar(30),
+    modified_date  timestamptz
+);
+
 CREATE TABLE {schema}.job_grades (
     grade_id          integer PRIMARY KEY,
     grade_code        varchar(10) NOT NULL,
@@ -479,12 +501,14 @@ CREATE TABLE {schema}.employees (
     first_name        varchar(50) NOT NULL,
     last_name         varchar(50) NOT NULL,
     email             varchar(100),
+    phone_work        varchar(30),
+    phone_mobile      varchar(30),
     hire_date         date NOT NULL,
     termination_date  date,
     dept_id           integer NOT NULL REFERENCES {schema}.departments (dept_id),
     job_id            integer NOT NULL REFERENCES {schema}.job_titles (job_id),
     manager_emp_id    integer REFERENCES {schema}.employees (emp_id),
-    location_code     varchar(10),
+    location_code     varchar(10) REFERENCES {schema}.locations (location_code),
     employment_type   varchar(20) DEFAULT 'FULL_TIME',
     employment_status varchar(20) DEFAULT 'ACTIVE',
     active_flag       char(1) DEFAULT 'Y' NOT NULL
@@ -584,6 +608,16 @@ def load(data: SeedData, schema: str = "raw", dry_run: bool = False) -> None:
 
     execute_values(
         cur,
+        f"INSERT INTO {schema}.locations "
+        f"(location_code, location_name, city, state_province, country_code, "
+        f"active_flag, created_by) VALUES %s",
+        [
+            (code, name, city, state, country, "Y", "SEED")
+            for code, name, city, state, country in LOCATIONS
+        ],
+    )
+    execute_values(
+        cur,
         f"INSERT INTO {schema}.job_grades "
         f"(grade_id, grade_code, grade_name, min_salary, max_salary, overtime_eligible) "
         f"VALUES %s",
@@ -615,15 +649,16 @@ def load(data: SeedData, schema: str = "raw", dry_run: bool = False) -> None:
     execute_values(
         cur,
         f"INSERT INTO {schema}.employees "
-        f"(emp_id, emp_number, first_name, last_name, email, hire_date, "
-        f"termination_date, dept_id, job_id, manager_emp_id, location_code, "
-        f"employment_type, employment_status, active_flag) VALUES %s",
+        f"(emp_id, emp_number, first_name, last_name, email, phone_work, "
+        f"phone_mobile, hire_date, termination_date, dept_id, job_id, "
+        f"manager_emp_id, location_code, employment_type, employment_status, "
+        f"active_flag) VALUES %s",
         [
             (
                 e.emp_id, e.emp_number, e.first_name, e.last_name, e.email,
-                e.hire_date, e.termination_date, e.dept_id, e.job_id,
-                e.manager_emp_id, e.location_code, e.employment_type,
-                e.employment_status, e.active_flag,
+                e.phone_work, e.phone_mobile, e.hire_date, e.termination_date,
+                e.dept_id, e.job_id, e.manager_emp_id, e.location_code,
+                e.employment_type, e.employment_status, e.active_flag,
             )
             for e in data.employees
         ],
