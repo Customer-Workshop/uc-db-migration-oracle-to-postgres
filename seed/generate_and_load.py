@@ -196,6 +196,8 @@ class SeedData:
 
 def generate(seed: int = SEED) -> SeedData:
     """Generate deterministic synthetic HRMS data."""
+    if Faker is None:
+        raise ImportError("Faker is required: pip install Faker")
     rng = random.Random(seed)
     fake = Faker()
     Faker.seed(seed)
