@@ -36,7 +36,9 @@ export PGHOST=localhost PGPORT=5432 PGDATABASE=hrms \
 # 2. Start PostgreSQL locally (optional if you already have one)
 make docker-up
 
-# 3. Install Python deps + pre-commit hooks
+# 3. Install Python deps + pre-commit hooks (a venv avoids PEP 668
+#    "externally managed environment" errors on Debian/Ubuntu)
+python3 -m venv .venv && source .venv/bin/activate
 make install
 
 # 4. Full lifecycle: seed source data → deploy converted objects → reconcile
